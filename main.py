@@ -64,6 +64,8 @@ def main():
 
 # TODO: Futuras funcionalidades
 #   1:  Crear un csv en vez de un excel por cada día
+#       1.1: Que cada día se coja el excel con todos los datos y se actualice con los datos del nuevo día,
+#       añadiendo simplemente una nueva hoja.
 #   2:  Implementar una funcion que coja los .csvs, los lea, y cree un excel gordo con el precio de cada día
 #       en una hoja distinta
 #   3:  Implementar la posibilidad de un grafico interactivo con matplotlib donde poder visualizar diferentes datos
