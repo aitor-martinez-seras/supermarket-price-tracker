@@ -4,6 +4,7 @@ import requests
 from constants import *
 from bs4 import BeautifulSoup
 import re
+from abc import ABCMeta, abstractmethod
 
 #########################################################
 
@@ -32,12 +33,11 @@ def load_excel():
 
 
 # TODO: Code from below is the class implementation version
-'''
 from time import perf_counter
 from multiprocessing import Pool
 
 
-class Supermarket():
+class Supermarket(metaclass=ABCMeta):
 
     def __init__(self, urls):
         self.urls = urls
@@ -51,6 +51,7 @@ class Supermarket():
         return soup
 
     # To be overridden by the child
+    @abstractmethod
     def price_retriever(self, html):
         pass
 
@@ -101,7 +102,5 @@ class BM(Supermarket):
     def __init__(self, urls):
         super(BM, self).__init__(urls)
 
-    def price_retriever(self):
+    def price_retriever(self, html):
         pass
-
-'''

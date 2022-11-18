@@ -1,6 +1,7 @@
 import pandas as pd
 from utils import scrape_html_of_url, parse_eroski_price, parse_bm_price, load_excel
 from time import perf_counter
+from datetime import datetime
 from multiprocessing import Pool
 
 
@@ -51,16 +52,17 @@ def main():
         print('Recogiendo datos de Eroski')
         prices_eroski = pool.map(retrieve_one_price_eroski, df_urls['URL Eroski'])
         print('Recogiendo datos de BM')
-        prices_bm = pool.map(retrieve_one_price_eroski, df_urls['URL Eroski'])
-
+        #prices_bm = pool.map(retrieve_one_price_bm, df_urls['URL BM'])
+    prices_bm = prices_eroski.copy()
     # Add the different colums to the dataframe
     df_prices['Eroski'] = prices_eroski
     df_prices['BM'] = prices_bm
 
     # Create the excel
     # TODO: Especificar que la primera columna es la de los indices
-    df_prices.to_excel('precios.xlsx')
-
+    df_prices.to_csv('precios.csv', index=False)
+    df_prices.to_excel('precios.xlsx', sheet_name=datetime.now().date().isoformat(), index=False)
+    print()
 
 # TODO: Futuras funcionalidades
 #   1:  Crear un csv en vez de un excel por cada día
