@@ -1,8 +1,14 @@
 import pandas as pd
 from utils import scrape_html_of_url, parse_eroski_price, parse_bm_price, load_excel
+from utils import ALL_RETS, Supermarket
 from time import perf_counter
 from datetime import datetime
 from multiprocessing import Pool
+import ray
+
+
+if not ray.is_initialized():
+    ray.init()
 
 
 # TODO: Encapsulate each supermarket in an object -> Es necesario o util??, pensar en futuras funcionalidades.
@@ -34,8 +40,11 @@ def retrieve_one_price_bm(product_url: str or float) -> float:
     return price
 
 
-# TODO: Implementar logging para poder debuggear cuando este corriendo en RPi
+def get_market_jobs(market, urls):
+    return [market.retrieve_one_price.remote(url) for url in urls]
 
+
+# TODO: Implementar logging para poder debuggear cuando este corriendo en RPi
 def main():
     df_urls = load_excel()
     dict_list = []
@@ -46,23 +55,28 @@ def main():
     # Retrieve URLs
     urls_mercadona = df_urls['URL Mercadona']
     urls_aldi = df_urls['URL ALDI']
+    
 
-    print('Creating the pool and running it')
-    with Pool() as pool:
-        print('Recogiendo datos de Eroski')
-        prices_eroski = pool.map(retrieve_one_price_eroski, df_urls['URL Eroski'])
-        print('Recogiendo datos de BM')
-        #prices_bm = pool.map(retrieve_one_price_bm, df_urls['URL BM'])
-    prices_bm = prices_eroski.copy()
+    Eroski = Supermarket.remote(ALL_RETS['eroski'])
+    Eroski2 = Supermarket.remote(ALL_RETS['eroski'])
+#    p = get_market_jobs(Eroski, df_urls['URL Eroski'])
+    t1 = perf_counter()
+    
+    a = [
+        Eroski.retrieve_all_prices.remote(df_urls['URL Eroski']),
+        Eroski2.retrieve_all_prices.remote(df_urls['URL Eroski'])
+    ]
+    print(ray.get(a))
+    print(perf_counter() - t1)
     # Add the different colums to the dataframe
-    df_prices['Eroski'] = prices_eroski
-    df_prices['BM'] = prices_bm
+    #df_prices['Eroski'] = prices_eroski
+    #df_prices['BM'] = prices_bm
 
     # Create the excel
     # TODO: Especificar que la primera columna es la de los indices
-    df_prices.to_csv('precios.csv', index=False)
-    df_prices.to_excel('precios.xlsx', sheet_name=datetime.now().date().isoformat(), index=False)
-    print()
+    #df_prices.to_csv('precios.csv', index=False)
+    #df_prices.to_excel('precios.xlsx', sheet_name=datetime.now().date().isoformat(), index=False)
+    #print()
 
 # TODO: Futuras funcionalidades
 #   1:  Crear un csv en vez de un excel por cada día
