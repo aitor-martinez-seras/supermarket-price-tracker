@@ -51,7 +51,7 @@ def main():
         print('Recogiendo datos de Eroski')
         prices_eroski = pool.map(retrieve_one_price_eroski, df_urls['URL Eroski'])
         print('Recogiendo datos de BM')
-        prices_bm = pool.map(retrieve_one_price_eroski, df_urls['URL BM'])
+        prices_bm = pool.map(retrieve_one_price_eroski, df_urls['URL Eroski'])
 
     # Add the different colums to the dataframe
     df_prices['Eroski'] = prices_eroski
