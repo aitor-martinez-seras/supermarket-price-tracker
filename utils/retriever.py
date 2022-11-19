@@ -9,8 +9,9 @@ class Retriever:
         Attributes:
             keys(List[Tuple]): Ordered keys that allow retrieving the price
     """
-    def __init__(self, keys):
+    def __init__(self, keys, has_js):
         self.keys = keys
+        self.has_js = has_js
 
     def get(self, html: BeautifulSoup) -> float:
         for k in self.keys:
@@ -28,7 +29,7 @@ class Retriever:
 
     # When iterating in the Pool, we want the method get in each iteration
     def __next__(self):
-        return self.get
+        return self.get, self.has_js
 
 
 if __name__ == '__main__':

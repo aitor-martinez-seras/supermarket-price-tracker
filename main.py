@@ -1,22 +1,22 @@
 import pandas as pd
-from utils import scrape_html_of_url, load_excel, ALL_RETS, Retriever
+from utils import scrape_html_of_url, load_excel, EROSKI_RET, BM_RET
 from time import perf_counter
 from datetime import datetime
 from multiprocessing import Pool
 
 
-# TODO: Hay que tener cuidado con un error que me sale de:
-#  ConnectionAbortedError: [WinError 10053] Se ha anulado una conexión establecida por el software en su equipo host
+# TODO: En un futuro igual quiero coger mas info de una consulta, la manera de implementar será que el metodo get
+#  del Retriever devuelto en los argumentos devuelva mas datos aparte del precio
 def retrieve_one_price(args) -> float:
     # Performance analysis
     t1 = perf_counter()
 
     # Exrtract the URL and the retriever, that is the .get method of the Retriever class
-    product_url, retriever = args
+    product_url, (retriever, has_js) = args
 
     # Product name must be a string. If it is float it means it is Nan, so skip to next iteration
     if isinstance(product_url, str):
-        price = retriever(scrape_html_of_url(product_url))
+        price = retriever(scrape_html_of_url(product_url, has_js))
     else:
         price = 0
     t2 = perf_counter()
@@ -31,21 +31,17 @@ def main():
     # Create the dataframe to store prices
     df_prices = df_urls[['ID', 'PRODUCTOS ']]
 
-    # Works faster if instantiated
-    eroski_retriever = Retriever([('class', 'price-now'), ('itemprop', 'price')])
-    bm_retriever = Retriever([('class', 'price-now'), ('itemprop', 'price')])
-
     print('Comenzar recogida de datos de los supermercados')
-    t1 = perf_counter()
     with Pool() as pool:
 
         print('Recogiendo datos de Eroski')
-        prices_eroski = pool.map(retrieve_one_price, zip(df_urls['URL Eroski'], eroski_retriever))
+        t1 = perf_counter()
+        prices_eroski = pool.map(retrieve_one_price, zip(df_urls['URL Eroski'], EROSKI_RET))
         t2 = perf_counter()
         print(f'Tiempo en eroski: {t2 - t1}')
 
         print('Recogiendo datos de BM')
-        prices_bm = pool.map(retrieve_one_price, zip(df_urls['URL BM'], bm_retriever))
+        prices_bm = pool.map(retrieve_one_price, zip(df_urls['URL BM'], BM_RET))
         t3 = perf_counter()
         print(f'Tiempo en BM: {t3 - t2}')
 

@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup
 import re
 
 
+# TODO: This files info shoudl be move to retriever.py
+
 # TODO: Upgrade parsers to return different things as product descriptions, to fill the
 #  excel file containing the price with more data about the product
 # TODO: HANDLE THE DIFFERENT PROBLEMS WE MAY ENCOUNTER SCRAPING TO INFORM THE LOGGER
@@ -10,16 +12,15 @@ def parse_eroski_price(html_page: BeautifulSoup) -> float:
     Parses the html of Eroski supermarket and retrieves the price
     :param html_page: BeautifulSoup html object
     """
-    # Locate the tag with the price and extract the whole text
     price = html_page.find(attrs={"class": "price-now"}).find(attrs={"itemprop": "price"}).text
-    # Use the package regex (re) to find numbers separated by a comma. Then replace the comma for a dot and turn it to
-    # a float
+    # Use the package regex (re) to find numbers separated by a comma. Then select the first coincidence in the string.
+    # Finally replace the commas for dots in the string and turn it to a float
     # TODO: We have to handle the exception that the product shows as "No disponible", what causes that the price
     #  is not available
     try:
         price = float(re.findall(r"\d+\,\d+", price)[0].replace(',', '.'))
     except IndexError as e:
-        price = 0  # Si no está disponible, el precio será 0
+        price = 0  # Price 0 will indicate that we haven't find the price
     return price
 
 

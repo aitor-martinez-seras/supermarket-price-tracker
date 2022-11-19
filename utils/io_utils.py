@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import re
 from abc import ABCMeta, abstractmethod
 from constants import USER_AGENTS
+from requests_html import HTMLSession, AsyncHTMLSession
 
 #########################################################
 
@@ -16,16 +17,24 @@ from constants import USER_AGENTS
 #########################################################
 
 
-def scrape_html_of_url(product_url: str):
-    """
-    Retrieves the hmtl of the URL
-    :param product_url: string with the URL
-    :return: html parsed
-    """
-    page = requests.get(
-        product_url,
-        headers={'User-Agent': random.choice(USER_AGENTS)})
-    soup = BeautifulSoup(page.text, 'html.parser')
+def scrape_html_of_url(product_url: str, has_js: bool):
+    if has_js:
+        # TODO: Does not work with multiprocessing. https://github.com/psf/requests-html/issues/155
+        #  I think AsyncHTMLSession() could be the solution
+        #  https://stackoverflow.com/questions/53696855/multithreading-with-requests-html
+        #  https://github.com/psf/requests-html/issues/500
+        session = HTMLSession()
+        r = session.get(
+            product_url,
+            headers={'User-Agent': random.choice(USER_AGENTS)}
+        )
+        r.html.render()  # this call executes the js in the page
+        soup = BeautifulSoup(r.html.html, 'html.parser')
+    else:
+        page = requests.get(
+            product_url,
+            headers={'User-Agent': random.choice(USER_AGENTS)})
+        soup = BeautifulSoup(page.text, 'html.parser')
     return soup
 
 
@@ -105,3 +114,4 @@ class BM(Supermarket):
 
     def price_retriever(self, html):
         pass
+
