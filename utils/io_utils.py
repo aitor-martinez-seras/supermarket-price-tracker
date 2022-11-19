@@ -5,6 +5,7 @@ from constants import *
 from bs4 import BeautifulSoup
 import re
 from abc import ABCMeta, abstractmethod
+from constants import USER_AGENTS
 
 #########################################################
 
