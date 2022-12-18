@@ -26,8 +26,9 @@ def scrape_html_of_url(product_url: str, has_js: bool):
         session = HTMLSession()
         r = session.get(
             product_url,
-            #headers={'User-Agent': random.choice(USER_AGENTS)}
+            headers={'User-Agent': random.choice(USER_AGENTS)}
         )
+        # The parameters in the render method are necessary to ensure a rendering is made
         r.html.render(retries=10, wait=5, timeout=60, sleep=1)
         soup = BeautifulSoup(r.html.html, 'html.parser')
     else:

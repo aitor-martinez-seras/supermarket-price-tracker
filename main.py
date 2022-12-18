@@ -33,15 +33,15 @@ def main():
     # Create the dataframe to store prices
     df_prices = df_urls[['ID', 'PRODUCTOS ']]
 
-    for url in df_urls["URL BM"]:
-        retrieve_one_price((url, (BM_RET.get, BM_RET.has_js)))
+    # TODO: Parece que funciona el multiprocessing tanto en RPi como en Windows, aunque en RPI muestra error raro
+    #   el
 
     print('Comenzar recogida de datos de los supermercados')
     with Pool(4) as pool:
 
         print('Recogiendo datos de Eroski')
         t1 = perf_counter()
-        #prices_eroski = pool.map(retrieve_one_price, zip(df_urls['URL Eroski'], EROSKI_RET))
+        prices_eroski = pool.map(retrieve_one_price, zip(df_urls['URL Eroski'], EROSKI_RET))
         t2 = perf_counter()
         print(f'Tiempo en eroski: {t2 - t1}')
 
@@ -61,7 +61,7 @@ def main():
 
     print('Tiempo en recuperar precios', perf_counter() - t1)
 
-    #prices_eroski = np.asarray(prices_eroski, dtype=np.float16)
+    prices_eroski = np.asarray(prices_eroski, dtype=np.float16)
     prices_bm = np.asarray(prices_bm, dtype=np.float16)
 
     # TODO: Add functionality to repeat the products where a 0 was the price, in case now it retrieves it.

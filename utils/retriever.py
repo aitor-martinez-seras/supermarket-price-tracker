@@ -14,6 +14,7 @@ class Retriever:
         self.has_js = has_js
 
     def get(self, html: BeautifulSoup) -> float:
+        # TODO: Better debug this
         if html == 0:  # In case HTML cannot be rendered from JS, a 0 will arrive
             return 0
         for k in self.keys:
