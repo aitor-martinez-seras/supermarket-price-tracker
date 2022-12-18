@@ -33,7 +33,7 @@ def main():
     # Create the dataframe to store prices
     df_prices = df_urls[['ID', 'PRODUCTOS ']]
 
-    for url in df_prices["URL BM"]:
+    for url in df_urls["URL BM"]:
         retrieve_one_price((url, (BM_RET.get, BM_RET.has_js)))
 
     print('Comenzar recogida de datos de los supermercados')
