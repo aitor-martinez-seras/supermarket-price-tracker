@@ -1,5 +1,7 @@
 import pandas as pd
+import numpy as np
 from utils import scrape_html_of_url, load_excel, EROSKI_RET, BM_RET
+from constants import URLS_EXCEL
 from time import perf_counter
 from datetime import datetime
 from multiprocessing import Pool
@@ -26,13 +28,13 @@ def retrieve_one_price(args) -> float:
 
 # TODO: Implementar logging para poder debuggear cuando este corriendo en RPi
 def main():
-    df_urls = load_excel()
+    df_urls = load_excel(URLS_EXCEL)
 
     # Create the dataframe to store prices
     df_prices = df_urls[['ID', 'PRODUCTOS ']]
 
     print('Comenzar recogida de datos de los supermercados')
-    with Pool() as pool:
+    with Pool(4) as pool:
 
         print('Recogiendo datos de Eroski')
         t1 = perf_counter()
@@ -41,7 +43,7 @@ def main():
         print(f'Tiempo en eroski: {t2 - t1}')
 
         print('Recogiendo datos de BM')
-        prices_bm = pool.map(retrieve_one_price, zip(df_urls['URL BM'], BM_RET))
+        prices_bm = pool.map(retrieve_one_price, zip(df_urls['URL BM'], BM_RET), chunksize=4)
         t3 = perf_counter()
         print(f'Tiempo en BM: {t3 - t2}')
 
@@ -55,6 +57,12 @@ def main():
         # print(f'Tiempo en ALDI: {perf_counter() - t4}')
 
     print('Tiempo en recuperar precios', perf_counter() - t1)
+
+    prices_eroski = np.asarray(prices_eroski, dtype=np.float16)
+    prices_bm = np.asarray(prices_bm, dtype=np.float16)
+
+    # TODO: Add functionality to repeat the products where a 0 was the price, in case now it retrieves it.
+    #   implement a for loop over the values where prices == 0 (np.where(prices==0))...
 
     # Add the different colums to the dataframe
     df_prices['Eroski'] = prices_eroski
