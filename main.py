@@ -38,7 +38,7 @@ def main():
 
         print('Recogiendo datos de Eroski')
         t1 = perf_counter()
-        prices_eroski = pool.map(retrieve_one_price, zip(df_urls['URL Eroski'], EROSKI_RET))
+        #prices_eroski = pool.map(retrieve_one_price, zip(df_urls['URL Eroski'], EROSKI_RET))
         t2 = perf_counter()
         print(f'Tiempo en eroski: {t2 - t1}')
 
@@ -58,7 +58,7 @@ def main():
 
     print('Tiempo en recuperar precios', perf_counter() - t1)
 
-    prices_eroski = np.asarray(prices_eroski, dtype=np.float16)
+    #prices_eroski = np.asarray(prices_eroski, dtype=np.float16)
     prices_bm = np.asarray(prices_bm, dtype=np.float16)
 
     # TODO: Add functionality to repeat the products where a 0 was the price, in case now it retrieves it.
