@@ -1,1 +1,7 @@
-# supermarket-price-follower
+# Supermarket-price-follower
+
+## Requirements
+
+- pandas
+- numpy
+- request-html

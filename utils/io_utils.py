@@ -6,8 +6,7 @@ from bs4 import BeautifulSoup
 import re
 from abc import ABCMeta, abstractmethod
 from constants import USER_AGENTS
-from requests_html import HTMLSession, AsyncHTMLSession
-from time import sleep
+from requests_html import HTMLSession
 
 #########################################################
 
