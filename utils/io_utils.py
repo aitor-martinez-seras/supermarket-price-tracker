@@ -7,6 +7,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from constants import USER_AGENTS
 from requests_html import HTMLSession
+import time
 
 #########################################################
 
@@ -19,24 +20,39 @@ from requests_html import HTMLSession
 
 def scrape_html_of_url(product_url: str, has_js: bool):
     if has_js:
-        # TODO: Does not work with multiprocessing. https://github.com/psf/requests-html/issues/155
-        #  I think AsyncHTMLSession() could be the solution
-        #  https://stackoverflow.com/questions/53696855/multithreading-with-requests-html
-        #  https://github.com/psf/requests-html/issues/500
         session = HTMLSession()
-        r = session.get(
+        page = session.get(
             product_url,
             headers={'User-Agent': random.choice(USER_AGENTS)}
         )
+        if page.status_code != 200:
+            print(f'Bad response {page.status_code}', end='\t')
+            return 0
+        time.sleep(5)  # To enable the correct loading of the page
         # The parameters in the render method are necessary to ensure a rendering is made
-        r.html.render(retries=10, wait=5, timeout=60, sleep=1)
-        soup = BeautifulSoup(r.html.html, 'html.parser')
+        page.html.render(retries=10, wait=5, timeout=60, sleep=1)
+        page = page.html.html
+
     else:
         page = requests.get(
             product_url,
             headers={'User-Agent': random.choice(USER_AGENTS)})
-        soup = BeautifulSoup(page.text, 'html.parser')
+        if page.status_code != 200:
+            print(f'Bad response {page.status_code}', end='\t')
+            return 0
+        time.sleep(3)
+        page = page.text
+
+    soup = BeautifulSoup(page, 'html.parser')
     return soup
+
+
+def check_response_is_200(page: requests.models.Response):
+    if page.status_code == 200:
+        return True
+    else:
+        return False
+
 
 
 def load_excel(xlxs_path):
@@ -49,5 +65,7 @@ if __name__ == '__main__':
     df_urls = load_excel(r"C:\Users\110414\PycharmProjects\Seguidor-de-precios\LIBRO-BASE-PRODUCTOS_ok.xlsx")
     df_prices = df_urls[['ID', 'PRODUCTOS ']]
     from main import retrieve_one_price
+    get_mth, has_js = EROSKI_RET.get, EROSKI_RET.has_js
+    retrieve_one_price((df_urls['URL Eroski'][80], (get_mth, has_js)))
     get_mth, has_js = BM_RET.get, BM_RET.has_js
     retrieve_one_price((df_urls['URL BM'][0], (get_mth, has_js)))

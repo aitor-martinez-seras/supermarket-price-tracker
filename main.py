@@ -1,10 +1,13 @@
-import pandas as pd
-import numpy as np
-from utils import scrape_html_of_url, load_excel, EROSKI_RET, BM_RET
-from constants import URLS_EXCEL
 from time import perf_counter
 from datetime import datetime
 from multiprocessing import Pool
+from pathlib import Path
+
+import pandas as pd
+import numpy as np
+
+from utils import scrape_html_of_url, load_excel, EROSKI_RET, BM_RET
+from constants import URLS_EXCEL
 
 
 # TODO: En un futuro igual quiero coger mas info de una consulta, la manera de implementar será que el metodo get
@@ -14,15 +17,26 @@ def retrieve_one_price(args) -> float:
     t1 = perf_counter()
 
     # Exrtract the URL and the retriever, that is the .get method of the Retriever class
-    product_url, (retriever, has_js) = args
+    product_id, product_url, (retriever, has_js) = args
 
-    # Product name must be a string. If it is float it means it is Nan, so skip to next iteration
+    # In case the price is not found, it should be 0.
+    price = 0
+
+    # Product name must be a string. If it is float it means it is NaN, so skip to next iteration
     if isinstance(product_url, str):
-        price = retriever(scrape_html_of_url(product_url, has_js))
+        # In case AssertionError is raised, it means the URL was found but that the retriever
+        # can't retrieve the information we are looking for
+        try:
+            price = retriever(scrape_html_of_url(product_url, has_js))
+            t2 = perf_counter()
+            print(f'{product_id}. El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}')
+
+        except AssertionError:
+            print(f'{product_id}. URL encontrada pero no con la informacion buscada')
+
     else:
-        price = 0
-    t2 = perf_counter()
-    print(f'El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}')
+        print(f'{product_id}. URL del producto no es un string valido')
+
     return price
 
 
@@ -41,14 +55,14 @@ def main():
 
         print('Recogiendo datos de Eroski')
         t1 = perf_counter()
-        prices_eroski = pool.map(retrieve_one_price, zip(df_urls['URL Eroski'], EROSKI_RET))
+        prices_eroski = pool.map(retrieve_one_price, zip(df_urls['ID'], df_urls['URL Eroski'], EROSKI_RET))
         t2 = perf_counter()
         print(f'Tiempo en eroski: {t2 - t1}')
 
         print('Recogiendo datos de BM')
-        prices_bm = pool.map(retrieve_one_price, zip(df_urls['URL BM'], BM_RET), chunksize=4)
+        prices_bm = pool.map(retrieve_one_price, zip(df_urls['ID'], df_urls['URL BM'], BM_RET), chunksize=4)
         t3 = perf_counter()
-        print(f'Tiempo en BM: {t3 - t2}')
+        print(f'Tiempo en BM: {(t3 - t2)/60:.2f} minutos')
 
         # print('Recogiendo datos de Mercadona')
         # prices_mercadona = pool.map(retrieve_one_price_bm, df_urls['URL BM'])
@@ -59,7 +73,7 @@ def main():
         # prices_aldi = pool.map(retrieve_one_price_bm, df_urls['URL BM'])
         # print(f'Tiempo en ALDI: {perf_counter() - t4}')
 
-    print('Tiempo en recuperar precios', perf_counter() - t1)
+    print(f'Tiempo total en recuperar los precios de todos los supermercados: {(perf_counter() - t1)/60:.2f} minutos')
 
     prices_eroski = np.asarray(prices_eroski, dtype=np.float16)
     prices_bm = np.asarray(prices_bm, dtype=np.float16)
@@ -73,9 +87,11 @@ def main():
 
     # Create the excel
     # TODO: Especificar que la primera columna es la de los indices
-    df_prices.to_csv('precios.csv', index=False)
-    df_prices.to_excel('precios.xlsx', sheet_name=datetime.now().date().isoformat(), index=False)
-    print()
+    today = datetime.now().date().isoformat().replace("-", "_")
+    outputs_path = Path('outputs/')
+    df_prices.to_csv(outputs_path / f'{today}_precios.csv', index=False)
+    df_prices.to_excel(outputs_path / f'precios.xlsx', sheet_name=today, index=False)
+    print("Programa finalizado con exito!")
 
 # TODO: Futuras funcionalidades
 #   1:  Crear un csv en vez de un excel por cada día
@@ -92,8 +108,6 @@ def main():
 
 
 if __name__ == '__main__':
-    t1 = perf_counter()
+    t_inicio_programa = perf_counter()
     main()
-    t2 = perf_counter()
-    print(f'Tiempo transcurrido: {t2-t1:.3f}')
-
+    print(f'Tiempo transcurrido: {(perf_counter() - t_inicio_programa)/60:.2f} minutos')

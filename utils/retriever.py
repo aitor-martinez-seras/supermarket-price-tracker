@@ -13,12 +13,15 @@ class Retriever:
         self.keys = keys
         self.has_js = has_js
 
-    def get(self, html: BeautifulSoup) -> float:
+    def get(self, html: BeautifulSoup or int) -> float:
         # TODO: Better debug this
-        if html == 0:  # In case HTML cannot be rendered from JS, a 0 will arrive
+        if html == 0:  # A 0 will arrive in case there has been an error on getting the page or loading JS
             return 0
         for k in self.keys:
-            html = html.find(attrs={k[0]: k[1]})
+            try:
+                html = html.find(attrs={k[0]: k[1]})
+            except AttributeError:
+                raise AssertionError
 
         # Handle the exception where the render fails to generate the HTML correctly
         try:
