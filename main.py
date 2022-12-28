@@ -12,7 +12,7 @@ from constants import URLS_EXCEL
 
 # TODO: En un futuro igual quiero coger mas info de una consulta, la manera de implementar será que el metodo get
 #  del Retriever devuelto en los argumentos devuelva mas datos aparte del precio
-def retrieve_one_price(args) -> float:
+def retrieve_one_product(args) -> float:
     # Performance analysis
     t1 = perf_counter()
 
@@ -24,13 +24,12 @@ def retrieve_one_price(args) -> float:
 
     # Product name must be a string. If it is float it means it is NaN, so skip to next iteration
     if isinstance(product_url, str):
-        # In case AssertionError is raised, it means the URL was found but that the retriever
-        # can't retrieve the information we are looking for
         try:
             price = retriever(scrape_html_of_url(product_url, has_js))
             t2 = perf_counter()
             print(f'{product_id}. El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}')
-
+        # In case AssertionError is raised, it means the URL was found but that the retriever
+        # can't retrieve the information we are looking for
         except AssertionError:
             print(f'{product_id}. URL encontrada pero no con la informacion buscada')
 
@@ -55,12 +54,12 @@ def main():
 
         print('Recogiendo datos de Eroski')
         t1 = perf_counter()
-        prices_eroski = pool.map(retrieve_one_price, zip(df_urls['ID'], df_urls['URL Eroski'], EROSKI_RET))
+        prices_eroski = pool.map(retrieve_one_product, zip(df_urls['ID'], df_urls['URL Eroski'], EROSKI_RET))
         t2 = perf_counter()
         print(f'Tiempo en eroski: {t2 - t1}')
 
         print('Recogiendo datos de BM')
-        prices_bm = pool.map(retrieve_one_price, zip(df_urls['ID'], df_urls['URL BM'], BM_RET), chunksize=4)
+        prices_bm = pool.map(retrieve_one_product, zip(df_urls['ID'], df_urls['URL BM'], BM_RET), chunksize=4)
         t3 = perf_counter()
         print(f'Tiempo en BM: {(t3 - t2)/60:.2f} minutos')
 

@@ -4,6 +4,13 @@ from pathlib import Path
 # TODO: Preguntar a Aritz cual es la mejor manera de hacer esta operacion de importar los user agents
 URLS_EXCEL = r"LIBRO-BASE-PRODUCTOS_ok.xlsx"
 RESOURCES_PATH = Path('resources')
+
+UNIDADES = {
+    "litros": ["litro", "litros"],
+    "kilos": ["kilo", "kilos", "kg"],
+
+}
+
 """
 with open(RESOURCES_PATH / 'user-agents.txt', 'r') as f:
     USER_AGENTS = []

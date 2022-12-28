@@ -1,10 +1,7 @@
 from pandas import read_excel
 import random
 import requests
-from constants import *
 from bs4 import BeautifulSoup
-import re
-from abc import ABCMeta, abstractmethod
 from constants import USER_AGENTS
 from requests_html import HTMLSession
 import time
@@ -47,14 +44,6 @@ def scrape_html_of_url(product_url: str, has_js: bool):
     return soup
 
 
-def check_response_is_200(page: requests.models.Response):
-    if page.status_code == 200:
-        return True
-    else:
-        return False
-
-
-
 def load_excel(xlxs_path):
     return read_excel(xlxs_path, )
 
@@ -64,8 +53,8 @@ if __name__ == '__main__':
     from utils import scrape_html_of_url, EROSKI_RET, BM_RET
     df_urls = load_excel(r"C:\Users\110414\PycharmProjects\Seguidor-de-precios\LIBRO-BASE-PRODUCTOS_ok.xlsx")
     df_prices = df_urls[['ID', 'PRODUCTOS ']]
-    from main import retrieve_one_price
+    from main import retrieve_one_product
     get_mth, has_js = EROSKI_RET.get, EROSKI_RET.has_js
-    retrieve_one_price((df_urls['URL Eroski'][80], (get_mth, has_js)))
+    retrieve_one_product((df_urls['URL Eroski'][80], (get_mth, has_js)))
     get_mth, has_js = BM_RET.get, BM_RET.has_js
-    retrieve_one_price((df_urls['URL BM'][0], (get_mth, has_js)))
+    retrieve_one_product((df_urls['URL BM'][0], (get_mth, has_js)))

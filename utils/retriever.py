@@ -15,11 +15,15 @@ class Retriever:
 
     def get(self, html: BeautifulSoup or int) -> float:
         # TODO: Better debug this
-        if html == 0:  # A 0 will arrive in case there has been an error on getting the page or loading JS
+        # A 0 will arrive in case there has been a bad response from the server (<404> for example)
+        if html == 0:
             return 0
+
         for k in self.keys:
             try:
                 html = html.find(attrs={k[0]: k[1]})
+            # If the page is received but the content we look for is not available, raising an AttributeError,
+            # we raise AssertionError to be catch by the retrieve_one_price() function in main
             except AttributeError:
                 raise AssertionError
 
@@ -32,7 +36,7 @@ class Retriever:
 
     def check_float(self, price):
         try:
-            return float(re.findall(r"\d+\,\d+", price)[0].replace(',', '.'))
+            return round(float(re.findall(r"\d+\,\d+", price)[0].replace(',', '.')), 2)
         except IndexError as e:
             return None
 
