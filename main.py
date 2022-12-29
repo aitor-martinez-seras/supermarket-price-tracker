@@ -5,19 +5,19 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
+import openpyxl as pxl
 
-from utils import scrape_html_of_url, load_excel, EROSKI_RET, BM_RET
-from constants import URLS_EXCEL
+from utils import scrape_html_of_url, load_excel, write_dataframe_to_excel, EROSKI_RET, BM_RET
+from constants import URLS_EXCEL, UNITS, MONTHS
 
 
-# TODO: En un futuro igual quiero coger mas info de una consulta, la manera de implementar será que el metodo get
-#  del Retriever devuelto en los argumentos devuelva mas datos aparte del precio
+# TODO: Tengo que implementar que se vaya acumulando en un logger el status de cada consulta, si es OK o no
 def retrieve_one_product(args) -> float:
     # Performance analysis
     t1 = perf_counter()
 
     # Exrtract the URL and the retriever, that is the .get method of the Retriever class
-    product_id, product_url, (retriever, has_js) = args
+    product_id, product_unit, product_url, (retriever, has_js) = args
 
     # In case the price is not found, it should be 0.
     price = 0
@@ -25,7 +25,8 @@ def retrieve_one_product(args) -> float:
     # Product name must be a string. If it is float it means it is NaN, so skip to next iteration
     if isinstance(product_url, str):
         try:
-            price = retriever(scrape_html_of_url(product_url, has_js))
+            units = UNITS[product_unit]
+            price = retriever(units, scrape_html_of_url(product_url, has_js))
             t2 = perf_counter()
             print(f'{product_id}. El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}')
         # In case AssertionError is raised, it means the URL was found but that the retriever
@@ -44,7 +45,7 @@ def main():
     df_urls = load_excel(URLS_EXCEL)
 
     # Create the dataframe to store prices
-    df_prices = df_urls[['ID', 'PRODUCTOS ']]
+    df_prices = df_urls[['ID', 'PRODUCTOS', 'UNIDADES']]
 
     # TODO: Parece que funciona el multiprocessing tanto en RPi como en Windows, aunque en RPI muestra error raro
     #   el
@@ -54,12 +55,19 @@ def main():
 
         print('Recogiendo datos de Eroski')
         t1 = perf_counter()
-        prices_eroski = pool.map(retrieve_one_product, zip(df_urls['ID'], df_urls['URL Eroski'], EROSKI_RET))
+        prices_eroski = pool.map(
+            retrieve_one_product,
+            zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL Eroski'], EROSKI_RET)
+        )
         t2 = perf_counter()
-        print(f'Tiempo en eroski: {t2 - t1}')
+        print(f'Tiempo en eroski: {(t2 - t1)/60:.2f} minutos')
 
         print('Recogiendo datos de BM')
-        prices_bm = pool.map(retrieve_one_product, zip(df_urls['ID'], df_urls['URL BM'], BM_RET), chunksize=4)
+        prices_bm = pool.map(
+            retrieve_one_product,
+            zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL BM'], BM_RET),
+            chunksize=4
+        )
         t3 = perf_counter()
         print(f'Tiempo en BM: {(t3 - t2)/60:.2f} minutos')
 
@@ -74,22 +82,44 @@ def main():
 
     print(f'Tiempo total en recuperar los precios de todos los supermercados: {(perf_counter() - t1)/60:.2f} minutos')
 
-    prices_eroski = np.asarray(prices_eroski, dtype=np.float16)
-    prices_bm = np.asarray(prices_bm, dtype=np.float16)
+    prices_eroski = np.asarray(prices_eroski, dtype='float')
+    prices_bm = np.asarray(prices_bm, dtype='float')
 
     # TODO: Add functionality to repeat the products where a 0 was the price, in case now it retrieves it.
     #   implement a for loop over the values where prices == 0 (np.where(prices==0))...
 
     # Add the different colums to the dataframe
-    df_prices['Eroski'] = prices_eroski
-    df_prices['BM'] = prices_bm
+    df_prices['Eroski'] = pd.Series(prices_eroski, dtype='float')
+    df_prices['BM'] = pd.Series(prices_bm, dtype='float')
 
-    # Create the excel
-    # TODO: Especificar que la primera columna es la de los indices
-    today = datetime.now().date().isoformat().replace("-", "_")
+    # ----------------------
+    # Save csv and excel
+    # ----------------------
+    today_datetime = datetime.now().date()
+    today = today_datetime.isoformat().replace("-", "_")
+    month_number = str(today_datetime.month).zfill(2)
+    month_name = MONTHS[month_number]
     outputs_path = Path('outputs/')
-    df_prices.to_csv(outputs_path / f'{today}_precios.csv', index=False)
-    df_prices.to_excel(outputs_path / f'precios.xlsx', sheet_name=today, index=False)
+
+    # Save csv
+    csv_path = outputs_path / f'{today}_precios.csv'
+    df_prices.to_csv(csv_path, index=False)
+
+    # Save excel
+    excel_path = outputs_path / f'{month_number}_listado_precios_{month_name}.xlsx'
+    if excel_path.is_file():
+        excel_book = pxl.load_workbook(excel_path)
+        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+            writer.book = excel_book
+            writer.sheets = {
+                worksheet.title: worksheet
+                for worksheet in excel_book.worksheets
+            }
+            write_dataframe_to_excel(df=df_prices, writer=writer, sheet_name=today)
+            df_prices.to_excel(writer, sheet_name=today, index=False)
+            writer.save()
+    else:
+        df_prices.to_excel(excel_path, sheet_name=today, index=False)
     print("Programa finalizado con exito!")
 
 # TODO: Futuras funcionalidades
@@ -107,6 +137,6 @@ def main():
 
 
 if __name__ == '__main__':
-    t_inicio_programa = perf_counter()
+    t_start_program = perf_counter()
     main()
-    print(f'Tiempo transcurrido: {(perf_counter() - t_inicio_programa)/60:.2f} minutos')
+    print(f'Tiempo transcurrido: {(perf_counter() - t_start_program)/60:.2f} minutos')

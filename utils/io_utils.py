@@ -1,10 +1,13 @@
-from pandas import read_excel
 import random
+import time
+
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from constants import USER_AGENTS
 from requests_html import HTMLSession
-import time
+
+from constants import USER_AGENTS
+
 
 #########################################################
 
@@ -45,13 +48,16 @@ def scrape_html_of_url(product_url: str, has_js: bool):
 
 
 def load_excel(xlxs_path):
-    return read_excel(xlxs_path, )
+    return pd.read_excel(xlxs_path)
 
+
+def write_dataframe_to_excel(df: pd.DataFrame, writer: pd.ExcelWriter, sheet_name: str):
+    df.to_excel(writer, sheet_name=sheet_name, index=False, float_format="%.2f")
 
 
 if __name__ == '__main__':
     from utils import scrape_html_of_url, EROSKI_RET, BM_RET
-    df_urls = load_excel(r"C:\Users\110414\PycharmProjects\Seguidor-de-precios\LIBRO-BASE-PRODUCTOS_ok.xlsx")
+    df_urls = load_excel(r"C:\Users\110414\PycharmProjects\Seguidor-de-precios\Lista_de_productos.xlsx.xlsx")
     df_prices = df_urls[['ID', 'PRODUCTOS ']]
     from main import retrieve_one_product
     get_mth, has_js = EROSKI_RET.get, EROSKI_RET.has_js
