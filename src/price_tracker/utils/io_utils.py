@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
-from constants import USER_AGENTS
+from src.price_tracker.constants import USER_AGENTS
 
 
 #########################################################
@@ -56,10 +56,10 @@ def write_dataframe_to_excel(df: pd.DataFrame, writer: pd.ExcelWriter, sheet_nam
 
 
 if __name__ == '__main__':
-    from utils import scrape_html_of_url, EROSKI_RET, BM_RET
+    from src.price_tracker.utils import EROSKI_RET, BM_RET
     df_urls = load_excel(r"C:\Users\110414\PycharmProjects\Seguidor-de-precios\Lista_de_productos.xlsx.xlsx")
     df_prices = df_urls[['ID', 'PRODUCTOS ']]
-    from main import retrieve_one_product
+    from src.price_tracker.main import retrieve_one_product
     get_mth, has_js = EROSKI_RET.get, EROSKI_RET.has_js
     retrieve_one_product((df_urls['URL Eroski'][80], (get_mth, has_js)))
     get_mth, has_js = BM_RET.get, BM_RET.has_js

@@ -1,8 +1,9 @@
 from pathlib import Path
 
 # TODO: Preguntar a Aritz cual es la mejor manera de hacer esta operacion de importar los user agents
-URLS_EXCEL = r"Lista_de_productos.xlsx"
-RESOURCES_PATH = Path('resources')
+RESOURCES_PATH = Path('resources/')
+URLS_EXCEL_PATH = RESOURCES_PATH / r'Lista_de_productos.xlsx'
+
 
 UNITS = {
     "litro": ("litro", "litros"),

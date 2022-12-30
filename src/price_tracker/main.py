@@ -7,8 +7,8 @@ import pandas as pd
 import numpy as np
 import openpyxl as pxl
 
-from utils import scrape_html_of_url, load_excel, write_dataframe_to_excel, EROSKI_RET, BM_RET
-from constants import URLS_EXCEL, UNITS, MONTHS
+from src.price_tracker.utils import scrape_html_of_url, load_excel, write_dataframe_to_excel, EROSKI_RET, BM_RET
+from constants import URLS_EXCEL_PATH, UNITS, MONTHS
 
 
 # TODO: Tengo que implementar que se vaya acumulando en un logger el status de cada consulta, si es OK o no
@@ -42,7 +42,7 @@ def retrieve_one_product(args) -> float:
 
 # TODO: Implementar logging para poder debuggear cuando este corriendo en RPi
 def main():
-    df_urls = load_excel(URLS_EXCEL)
+    df_urls = load_excel(URLS_EXCEL_PATH)
 
     # Create the dataframe to store prices
     df_prices = df_urls[['ID', 'PRODUCTOS', 'UNIDADES']]
@@ -55,10 +55,10 @@ def main():
 
         print('Recogiendo datos de Eroski')
         t1 = perf_counter()
-        # prices_eroski = pool.map(
-        #     retrieve_one_product,
-        #     zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL Eroski'], EROSKI_RET)
-        # )
+        prices_eroski = pool.map(
+            retrieve_one_product,
+            zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL Eroski'], EROSKI_RET)
+        )
         t2 = perf_counter()
         print(f'Tiempo en eroski: {(t2 - t1)/60:.2f} minutos')
 

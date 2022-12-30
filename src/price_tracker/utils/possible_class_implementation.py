@@ -1,6 +1,14 @@
 # TODO: Code from below is the class implementation version
 from time import perf_counter
 from multiprocessing import Pool
+from abc import ABCMeta, abstractmethod
+import random
+import re
+
+from bs4 import BeautifulSoup
+import requests
+
+from ..constants import USER_AGENTS
 
 
 class Supermarket(metaclass=ABCMeta):
@@ -59,7 +67,7 @@ class Eroski(Supermarket):
         try:
             price = float(re.findall(r"\d+\,\d+", price)[0].replace(',', '.'))
         except IndexError as e:
-            prince = None
+            price = None
         return price
 
 

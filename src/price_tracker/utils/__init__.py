@@ -1,6 +1,5 @@
 from .io_utils import *
-from .parsers import *
-from .retriever import *
+from .retriever import Retriever
 
 
 # TODO: Uncomment retrievers when we get the URLs
@@ -13,8 +12,6 @@ EROSKI_RET = Retriever(
     },
     has_js=False
 )
-
-#EROSKI_RET = Retriever([('itemprop', 'price'), ('class', 'price-product')], has_js=False)
 BM_RET = Retriever(
     {
         "description": [('class', 'u-title-3 d-inline')],
@@ -23,10 +20,4 @@ BM_RET = Retriever(
     },
     has_js=True
 )
-# ALDI_RET  =
 # MERCADONA =
-ALL_RETS = {'Eroski': EROSKI_RET,
-            'BM': BM_RET,
-            # 'mercadona': MERCADONA,
-            # 'aldi': ALDI_RET
-}
