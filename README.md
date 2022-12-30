@@ -1,4 +1,4 @@
-# Supermarket-price-follower
+# Supermarket-price-tracker
 
 ## Requirements
 
