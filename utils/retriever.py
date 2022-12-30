@@ -19,10 +19,11 @@ class Retriever:
         if html == 0:
             return 0
 
-        # Price
+        # Price (a string with the price inside it, but not alone)
         price = self.retrieve_text_from_html(html, "price")
 
-        if price == '':  # Unitary price does not exits, we need to check description
+        # If unitary price does not exits, we need to check description
+        if price == '':
 
             description = self.retrieve_text_from_html(html, "description")
             # If "" is returned it means we cannot find the info we are looking for so
@@ -65,10 +66,19 @@ class Retriever:
 
     def check_units_in_split_str(self, prod_units: Tuple[str], split_str: List[str]) -> bool:
         for unit in prod_units:
-            for i, word in enumerate(split_str):
+            for word in split_str:
                 if unit.lower() == word.lower():
-                    return split_str[i-1]
-        return True
+                    return True
+        print('----------')
+        for p in prod_units:
+            print(p.lower(), end=' / ')
+        print()
+        for p in split_str:
+            print(p.lower(), end=' / ')
+        print()
+        print('Encountered incompatibilty between units')
+        print('----------')
+        return False
 
     def retrieve_description_from_html(self, html: BeautifulSoup) -> str:
         for k in self.keys["description"]:

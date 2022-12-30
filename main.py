@@ -55,10 +55,10 @@ def main():
 
         print('Recogiendo datos de Eroski')
         t1 = perf_counter()
-        prices_eroski = pool.map(
-            retrieve_one_product,
-            zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL Eroski'], EROSKI_RET)
-        )
+        # prices_eroski = pool.map(
+        #     retrieve_one_product,
+        #     zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL Eroski'], EROSKI_RET)
+        # )
         t2 = perf_counter()
         print(f'Tiempo en eroski: {(t2 - t1)/60:.2f} minutos')
 
