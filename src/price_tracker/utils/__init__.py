@@ -1,9 +1,6 @@
-from .io_utils import *
 from .retriever import Retriever
 
 
-# TODO: Uncomment retrievers when we get the URLs
-# EROSKI_RET = Retriever([('class', 'price-now'), ('itemprop', 'price')], has_js=False)
 EROSKI_RET = Retriever(
     {
         "description": [('itemprop', 'description')],

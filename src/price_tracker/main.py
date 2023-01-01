@@ -1,14 +1,15 @@
 from time import perf_counter
 from datetime import datetime
 from multiprocessing import Pool
-from pathlib import Path
 
 import pandas as pd
 import numpy as np
 import openpyxl as pxl
 
-from src.price_tracker.utils import scrape_html_of_url, load_excel, write_dataframe_to_excel, EROSKI_RET, BM_RET
-from constants import URLS_EXCEL_PATH, UNITS, MONTHS
+from constants import URLS_EXCEL_PATH, UNITS, MONTHS, OUTPUTS_PATH
+from utils import EROSKI_RET, BM_RET
+from utils.io_utils import scrape_html_of_url, load_excel, write_dataframe_to_excel
+from utils.prints import print_msg, custom_exception_info_msg
 
 
 # TODO: Tengo que implementar que se vaya acumulando en un logger el status de cada consulta, si es OK o no
@@ -29,13 +30,11 @@ def retrieve_one_product(args) -> float:
             price = retriever(units, scrape_html_of_url(product_url, has_js))
             t2 = perf_counter()
             print(f'{product_id}. El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}')
-        # In case AssertionError is raised, it means the URL was found but that the retriever
-        # can't retrieve the information we are looking for
-        except AssertionError:
-            print(f'{product_id}. URL encontrada pero no con la informacion buscada')
+        except AssertionError as e:
+            print_msg(custom_exception_info_msg(product_id, e.args[0]))
 
     else:
-        print(f'{product_id}. URL del producto no es un string valido')
+        print_msg(f'{product_id}. URL del producto no es un string valido')
 
     return price
 
@@ -99,14 +98,13 @@ def main():
     today = today_datetime.isoformat().replace("-", "_")
     month_number = str(today_datetime.month).zfill(2)
     month_name = MONTHS[month_number]
-    outputs_path = Path('outputs/')
 
     # Save csv
-    csv_path = outputs_path / f'{today}_precios.csv'
+    csv_path = OUTPUTS_PATH / f'{today}_precios.csv'
     df_prices.to_csv(csv_path, index=False)
 
     # Save excel
-    excel_path = outputs_path / f'{month_number}_listado_precios_{month_name}.xlsx'
+    excel_path = OUTPUTS_PATH / f'{month_number}_listado_precios_{month_name}.xlsx'
     if excel_path.is_file():
         excel_book = pxl.load_workbook(excel_path)
         with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:

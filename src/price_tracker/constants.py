@@ -1,21 +1,23 @@
 from pathlib import Path
 
 # TODO: Preguntar a Aritz cual es la mejor manera de hacer esta operacion de importar los user agents
-RESOURCES_PATH = Path('resources/')
+PACKAGE_PATH = Path('src/price_tracker')
+RESOURCES_PATH = PACKAGE_PATH / 'resources/'
 URLS_EXCEL_PATH = RESOURCES_PATH / r'Lista_de_productos.xlsx'
+OUTPUTS_PATH = PACKAGE_PATH / 'outputs'
 
 
 UNITS = {
-    "litro": ("litro", "litros"),
-    "kilo": ("kilo", "kilos", "kg"),
-    "mililitro": ("mililitro", "ml"),
-    "unidad": ("unidad", "ud", "uds"),
-    "dosis": ("dosis"),
-    "docena": ("docena"),
-    "metro": ("metro"),
-    "rollo": ("rollo"),
-    "manojo": ("manojo"),
-    "botella": ("botella")
+    "litro": ["litro", "litros"],
+    "kilo": ["kilo", "kilos", "kg"],
+    "mililitro": ["mililitro", "ml"],
+    "unidad": ["unidad", "ud", "uds"],
+    "dosis": ["dosis"],
+    "docena": ["docena"],
+    "metro": ["metro"],
+    "rollo": ["rollo"],
+    "manojo": ["manojo"],
+    "botella": ["botella"]
 }
 
 MONTHS = {

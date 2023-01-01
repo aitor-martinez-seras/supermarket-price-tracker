@@ -15,31 +15,29 @@ class Retriever:
         self.keys = keys
         self.has_js = has_js
 
-    def get(self, product_units: Tuple[str], html: BeautifulSoup) -> float:
-        # A 0 will arrive in case there has been a bad response from the server (<404> for example)
-        if isinstance(html, int):
-            return 0
+    def get(self, product_units: List[str], html: BeautifulSoup) -> float:
 
         # Price (a string with the price inside it, but not alone)
         price_str = self.retrieve_text_from_html(html, "price")
 
-        # If unitary price does not exits, we need to check description
+        # If unitary price does not exits (in BM cannot happen),
+        # we need to check description to see if units are correct or not
         if price_str == '':
 
             description = self.retrieve_text_from_html(html, "description")
             # If "" is returned it means we cannot find the info we are looking for so
             # we raise AssertionError to be catch by the retrieve_one_price() function in main
             if description == '':
-                raise AssertionError("HTML page is not correct")
+                raise AssertionError("incorrect-html")
 
             else:
                 correct_units = self.check_units_in_split_str(product_units, description.split())
                 if correct_units:
                     price_str = self.retrieve_text_from_html(html, "price-secondary")
                     if price_str == '':
-                        raise AssertionError("No secondary price found")
+                        raise AssertionError("no-secondary-price")
                 else:
-                    raise AssertionError("The number of units cannot be retrieved from description")
+                    raise AssertionError("no-units-in-description")
 
         else:  # Price exits, check if has searched units
             correct_units = self.check_units_in_split_str(product_units, price_str.split())
@@ -48,35 +46,30 @@ class Retriever:
                 # I have to go for secondary price
                 price_str = self.retrieve_text_from_html(html, "price-secondary")
                 if price_str == '':
-                    raise AssertionError("Secondary price not found")
+                    raise AssertionError("no-secondary-price")
 
         price = self.retrieve_float(price_str)
 
         return price
 
     def retrieve_text_from_html(self, html: BeautifulSoup, key: str) -> str:
-        for k in self.keys[key]:
-            text = html.find(attrs={k[0]: k[1]})
-            # If price is None we will assume that there is no price per unit, but that we are in
-            # the correct html
-            if text is None:
-                return ''
+        text = None
+        try:
+            for k in self.keys[key]:
+                text = html.find(attrs={k[0]: k[1]})
+        except AttributeError:
+            text = None
+        # If price is None we will assume that there is no price per unit, but that we are in
+        # the correct html
+        if text is None:
+            return ''
         return text.text
 
-    def check_units_in_split_str(self, prod_units: Tuple[str], split_str: List[str]) -> bool:
+    def check_units_in_split_str(self, prod_units: List[str], split_str: List[str]) -> bool:
         for unit in prod_units:
             for word in split_str:
                 if unit.lower() == word.lower():
                     return True
-        print('----------')
-        for p in prod_units:
-            print(p.lower(), end=' / ')
-        print()
-        for p in split_str:
-            print(p.lower(), end=' / ')
-        print()
-        print('Encountered incompatibilty between units')
-        print('----------')
         return False
 
     def retrieve_float(self, price: str) -> float:
