@@ -1,5 +1,5 @@
-from price_tracker.utils import retriever
+from price_tracker.utils.retriever import Retriever
 
 
 def test_retrieving():
-    assert isinstance(retriever.Retriever, object)
+    assert isinstance(Retriever, object)
