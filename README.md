@@ -1,5 +1,7 @@
 # Supermarket-price-tracker
 
+![Tests](https://github.com/aitor-martinez-seras/supermarket-price-tracker/actions/workflows/tests.yml/badge.svg)
+
 ## Requirements
 
 - pandas
