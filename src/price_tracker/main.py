@@ -106,16 +106,12 @@ def main():
     # Save excel
     excel_path = OUTPUTS_PATH / f'{month_number}_listado_precios_{month_name}.xlsx'
     if excel_path.is_file():
-        excel_book = pxl.load_workbook(excel_path)
-        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-            writer.book = excel_book
-            writer.sheets = {
-                worksheet.title: worksheet
-                for worksheet in excel_book.worksheets
-            }
-            write_dataframe_to_excel(df=df_prices, writer=writer, sheet_name=today)
-            df_prices.to_excel(writer, sheet_name=today, index=False)
-            writer.save()
+        try:
+            # It is crucial that the mode is 'a' (append), otherwise it overwrites whole document
+            with pd.ExcelWriter(excel_path, mode="a", engine='openpyxl') as writer:
+                write_dataframe_to_excel(df=df_prices, writer=writer, sheet_name=today)
+        except ValueError as e:
+            print(f'Not saving into the {excel_path} the sheet {today} as this error ocurred: {e}')
     else:
         df_prices.to_excel(excel_path, sheet_name=today, index=False)
     print("Programa finalizado con exito!")
