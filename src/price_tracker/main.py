@@ -4,7 +4,6 @@ from multiprocessing import Pool
 
 import pandas as pd
 import numpy as np
-import openpyxl as pxl
 
 from constants import URLS_EXCEL_PATH, UNITS, MONTHS, OUTPUTS_PATH
 from utils import EROSKI_RET, BM_RET
