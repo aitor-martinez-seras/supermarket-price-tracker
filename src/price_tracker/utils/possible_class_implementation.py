@@ -68,7 +68,7 @@ class Eroski(Supermarket):
             price = float(re.findall(r"\d+\,\d+", price)[0].replace(',', '.'))
         except IndexError as e:
             price = None
-        return price
+        return float(price)
 
 
 class BM(Supermarket):
