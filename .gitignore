@@ -2,6 +2,7 @@
 precios.csv
 src/price_tracker/outputs/precios.xlsx
 src/price_tracker/resources/scrapear_supermarkets.pptx
+src/price_tracker/resources/pswd.txt
 
 .idea/
 
