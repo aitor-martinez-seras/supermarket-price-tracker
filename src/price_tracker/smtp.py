@@ -1,29 +1,54 @@
-import smtplib, ssl
+import configparser
+import smtplib
+import ssl
 from pathlib import Path
+from email.message import EmailMessage
+
+from constants import SMTP_CFG_PATH
 
 
-def send_logs_via_email():
+def send_logs_via_email(today: str, logs_path: Path):
+    SMTP_CFG = load_smtp_settings(SMTP_CFG_PATH)
 
-    port = 465  # For SSL
-    smtp_server = "smtp.gmail.com"
-    sender_email = "aitormarseras95@gmail.com"  # Enter your address
-    receiver_email = "aitormarseras95@gmail.com"  # Enter receiver address
+    # Load desired logs
+    with open(logs_path, mode='r') as f:
+        body = f.read()
 
-    res_pth = Path('resources/pswd.txt')
-    with open(res_pth, mode="r") as f:
-        password = f.read()
-
-    message = """\
-    Subject: Hi there
-
-    This message is sent from Python."""
+    em = EmailMessage()
+    em['From'] = SMTP_CFG['sender_email']
+    em['To'] = SMTP_CFG['receiver_email']
+    em['subject'] = f'Logs dia {today.replace("_", "-")}'
+    em.set_content(body)
 
     context = ssl.create_default_context()
-    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message)
+    with smtplib.SMTP_SSL(SMTP_CFG['smtp_server'], SMTP_CFG['port'], context=context) as server:
+        server.login(SMTP_CFG['sender_email'], SMTP_CFG['password'])
+        server.sendmail(SMTP_CFG['sender_email'], SMTP_CFG['receiver_email'], em.as_string())
+
+
+def load_smtp_settings(path: Path):
+    config = configparser.ConfigParser()
+    with open(path) as f:
+        config.read_file(f)
+        config_dict = {
+            "port": config.get('sender settings', 'port'),
+            "smtp_server": config.get('sender settings', 'smtp_server'),
+            "sender_email": config.get('sender settings', 'email'),
+            "password": config.get('sender settings', 'password'),
+            "receiver_email": config.get('receiver settings', 'email'),
+        }
+        # port = config.get('sender settings', 'port')
+        # smtp_server = config.get('sender settings', 'smtp_server')
+        # sender_email = config.get('sender settings', 'email')
+        # password = config.get('sender settings', 'password')
+        # receiver_email = config.get('receiver settings', 'email')
+    return config_dict
 
 
 if __name__ == "__main__":
-    main()
+    from datetime import datetime
+    today_datetime = datetime.now().date()
+    today = today_datetime.isoformat().replace("-", "_")
+    logs_path = Path(rf'C:\Users\110414\PycharmProjects\Seguidor-de-precios\logs\{today}_debug.log')
+    send_logs_via_email(today, logs_path)
 

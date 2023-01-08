@@ -1,14 +1,20 @@
+import sys
 from time import perf_counter
 from datetime import datetime
 from multiprocessing import Pool
+import argparse
+import logging
+from logging.handlers import SMTPHandler
+from pathlib import Path
 
 import pandas as pd
 import numpy as np
 
-from constants import URLS_EXCEL_PATH, UNITS, MONTHS, OUTPUTS_PATH
+from constants import URLS_EXCEL_PATH, UNITS, MONTHS, OUTPUTS_PATH, LOGS_PATH
 from utils import EROSKI_RET, BM_RET
 from utils.io_utils import scrape_html_of_url, load_excel, write_dataframe_to_excel
 from utils.prints import print_msg, custom_exception_info_msg
+from smtp import send_logs_via_email
 
 
 # TODO: Tengo que implementar que se vaya acumulando en un logger el status de cada consulta, si es OK o no
@@ -16,7 +22,7 @@ def retrieve_one_product(args) -> float:
     # Performance analysis
     t1 = perf_counter()
 
-    # Exrtract the URL and the retriever, that is the .get method of the Retriever class
+    # Extract the URL and the retriever, that is the .get method of the Retriever class
     product_id, product_unit, product_url, (retriever, has_js) = args
 
     # In case the price is not found, it should be 0.
@@ -28,18 +34,27 @@ def retrieve_one_product(args) -> float:
             units = UNITS[product_unit]
             price = retriever(units, scrape_html_of_url(product_url, has_js))
             t2 = perf_counter()
-            print(f'{product_id}. El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}')
+            logger.info(f'{product_id}. El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}')
         except AssertionError as e:
-            print_msg(custom_exception_info_msg(product_id, e.args[0]))
+            print_msg(custom_exception_info_msg(product_id, e.args[0]), logger=logger, log_lvl=30)
 
     else:
-        print_msg(f'{product_id}. URL del producto no es un string valido')
+        print_msg(f'{product_id}. URL del producto no es un string valido', logger=logger, log_lvl=30)
 
     return price
 
 
 # TODO: Implementar logging para poder debuggear cuando este corriendo en RPi
 def main():
+    # --------------------
+    # Retrieve prices
+    # --------------------
+    logger.info('Inicio de programa')
+    logger.warning('Ojito')
+    logger.error('De error na')
+    logger.debug('Debugeando')
+    logger.info('Fin')
+    return
     df_urls = load_excel(URLS_EXCEL_PATH)
 
     # Create the dataframe to store prices
@@ -93,8 +108,6 @@ def main():
     # ----------------------
     # Save csv and excel
     # ----------------------
-    today_datetime = datetime.now().date()
-    today = today_datetime.isoformat().replace("-", "_")
     month_number = str(today_datetime.month).zfill(2)
     month_name = MONTHS[month_number]
 
@@ -131,5 +144,51 @@ def main():
 
 if __name__ == '__main__':
     t_start_program = perf_counter()
+    # parser = argparse.ArgumentParser(description='Supermarket-price-tracker main script')
+    # args = parser.parse_args()
+    # --------------------
+    # Define loggers
+    # --------------------
+    # SMTP_CFG = load_smtp_settings(SMTP_CFG_PATH)
+    logger = logging.getLogger('price_tracker')
+    logger.setLevel(logging.DEBUG)  # Set minimum level to enable the handlers
+
+    today_datetime = datetime.now().date()
+    today = today_datetime.isoformat().replace("-", "_")
+
+    # Create Handlers
+    file_handler_info = logging.FileHandler(LOGS_PATH / f'{today}_info.log', mode='w')
+    file_handler_debug = logging.FileHandler(LOGS_PATH / f'{today}_debug.log', mode='w')
+    stream_handler = logging.StreamHandler(sys.stdout)
+    # smtp_handler = SMTPHandler(
+    #     mailhost=(SMTP_CFG['smtp_server'], int(SMTP_CFG['port'])),
+    #     fromaddr=SMTP_CFG['sender_email'],
+    #     toaddrs=[SMTP_CFG['receiver_email']],
+    #     subject=f'Informe dia {today}',
+    #     credentials=(SMTP_CFG['sender_email'], SMTP_CFG['password']),
+    #     secure=()
+    # )
+
+    # Set handler levels
+    file_handler_info.setLevel(logging.INFO)
+    file_handler_debug.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.DEBUG)
+    # smtp_handler.setLevel(logging.INFO)
+
+    # Create the formatter and assign to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler_info.setFormatter(formatter)
+    file_handler_debug.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
+    # smtp_handler.setFormatter(formatter)
+
+    # Add Handlers to logger
+    logger.addHandler(file_handler_info)
+    logger.addHandler(file_handler_debug)
+    logger.addHandler(stream_handler)
+    # logger.addHandler(smtp_handler)
+
+    # Run main
     main()
+    send_logs_via_email(today, LOGS_PATH / f'{today}_debug.log')
     print(f'Tiempo transcurrido: {(perf_counter() - t_start_program)/60:.2f} minutos')
