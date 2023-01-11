@@ -1,4 +1,5 @@
 from .retriever import Retriever
+from .common import return_prices_and_log_msgs
 
 
 EROSKI_RET = Retriever(

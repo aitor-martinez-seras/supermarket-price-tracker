@@ -1,8 +1,5 @@
-import logging
-
-
-def print_msg(msg: str, logger: logging.Logger, log_lvl: int):
-    logger.log(log_lvl, f'''------------------------------------------
+def print_msg(msg: str):
+    print(f'''------------------------------------------
 {msg}
 ------------------------------------------'''
     )

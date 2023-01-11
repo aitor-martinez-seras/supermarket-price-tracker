@@ -6,19 +6,21 @@ import argparse
 import logging
 from logging.handlers import SMTPHandler
 from pathlib import Path
+from typing import Tuple, List
 
 import pandas as pd
 import numpy as np
 
 from constants import URLS_EXCEL_PATH, UNITS, MONTHS, OUTPUTS_PATH, LOGS_PATH
-from utils import EROSKI_RET, BM_RET
+from utils import EROSKI_RET, BM_RET, return_prices_and_log_msgs
 from utils.io_utils import scrape_html_of_url, load_excel, write_dataframe_to_excel
 from utils.prints import print_msg, custom_exception_info_msg
 from smtp import send_logs_via_email
 
 
 # TODO: Tengo que implementar que se vaya acumulando en un logger el status de cada consulta, si es OK o no
-def retrieve_one_product(args) -> float:
+def retrieve_one_product(args) -> Tuple[float, str, int]:
+    global logger
     # Performance analysis
     t1 = perf_counter()
 
@@ -34,27 +36,27 @@ def retrieve_one_product(args) -> float:
             units = UNITS[product_unit]
             price = retriever(units, scrape_html_of_url(product_url, has_js))
             t2 = perf_counter()
-            logger.info(f'{product_id}. El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}')
+            msg = f'{product_id}. El precio es: {price} euros.\t Ha tardado {t2 - t1:.5f}'
+            log_lvl = 20
+            print(msg)
         except AssertionError as e:
-            print_msg(custom_exception_info_msg(product_id, e.args[0]), logger=logger, log_lvl=30)
+            msg = custom_exception_info_msg(product_id, e.args[0])
+            log_lvl = 30
+            print_msg(msg)
 
     else:
-        print_msg(f'{product_id}. URL del producto no es un string valido', logger=logger, log_lvl=30)
+        msg = f'{product_id}. URL del producto no es un string valido'
+        log_lvl = 30
+        print_msg(msg)
 
-    return price
+    return price, msg, log_lvl
 
 
-# TODO: Implementar logging para poder debuggear cuando este corriendo en RPi
 def main():
     # --------------------
     # Retrieve prices
     # --------------------
-    logger.info('Inicio de programa')
-    logger.warning('Ojito')
-    logger.error('De error na')
-    logger.debug('Debugeando')
-    logger.info('Fin')
-    return
+    logger.info(f'{"#"*15} Inicio de programa {"#"*15}')
     df_urls = load_excel(URLS_EXCEL_PATH)
 
     # Create the dataframe to store prices
@@ -63,26 +65,32 @@ def main():
     # TODO: Parece que funciona el multiprocessing tanto en RPi como en Windows, aunque en RPI muestra error raro
     #   el
 
-    print('Comenzar recogida de datos de los supermercados')
+    logger.info('Comenzar recogida de datos de los supermercados')
     with Pool(4) as pool:
 
-        print('Recogiendo datos de Eroski')
+        # Eroski
+        logger.info('Recogiendo datos de Eroski')
         t1 = perf_counter()
-        prices_eroski = pool.map(
+        prices_and_msgs = pool.map(
             retrieve_one_product,
             zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL Eroski'], EROSKI_RET)
         )
+        # TODO: En el logger hay que indicar claramente el super de donde es, asi que añadir a la funcion la opcion
+        #   de definir un supermercado que se añadira al inicio del mensaje
+        prices_eroski = return_prices_and_log_msgs(prices_and_msgs, logger, supermarket='Eroski')
         t2 = perf_counter()
-        print(f'Tiempo en eroski: {(t2 - t1)/60:.2f} minutos')
+        logger.info(f'Tiempo en eroski: {(t2 - t1)/60:.2f} minutos')
 
-        print('Recogiendo datos de BM')
-        prices_bm = pool.map(
+        # BM
+        logger.info('Recogiendo datos de BM')
+        prices_and_msgs = pool.map(
             retrieve_one_product,
             zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL BM'], BM_RET),
             chunksize=4
         )
+        prices_bm = return_prices_and_log_msgs(prices_and_msgs, logger, supermarket='BM')
         t3 = perf_counter()
-        print(f'Tiempo en BM: {(t3 - t2)/60:.2f} minutos')
+        logger.info(f'Tiempo en BM: {(t3 - t2)/60:.2f} minutos')
 
         # print('Recogiendo datos de Mercadona')
         # prices_mercadona = pool.map(retrieve_one_price_bm, df_urls['URL BM'])
@@ -159,6 +167,7 @@ if __name__ == '__main__':
     # Create Handlers
     file_handler_info = logging.FileHandler(LOGS_PATH / f'{today}_info.log', mode='w')
     file_handler_debug = logging.FileHandler(LOGS_PATH / f'{today}_debug.log', mode='w')
+    file_handler_warnings = logging.FileHandler(LOGS_PATH / f'{today}_warnings.log', mode='w')
     stream_handler = logging.StreamHandler(sys.stdout)
     # smtp_handler = SMTPHandler(
     #     mailhost=(SMTP_CFG['smtp_server'], int(SMTP_CFG['port'])),
@@ -172,6 +181,7 @@ if __name__ == '__main__':
     # Set handler levels
     file_handler_info.setLevel(logging.INFO)
     file_handler_debug.setLevel(logging.DEBUG)
+    file_handler_warnings.setLevel(logging.WARNING)
     stream_handler.setLevel(logging.DEBUG)
     # smtp_handler.setLevel(logging.INFO)
 
@@ -179,16 +189,18 @@ if __name__ == '__main__':
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler_info.setFormatter(formatter)
     file_handler_debug.setFormatter(formatter)
+    file_handler_warnings.setFormatter(formatter)
     stream_handler.setFormatter(formatter)
     # smtp_handler.setFormatter(formatter)
 
     # Add Handlers to logger
     logger.addHandler(file_handler_info)
     logger.addHandler(file_handler_debug)
+    logger.addHandler(file_handler_warnings)
     logger.addHandler(stream_handler)
     # logger.addHandler(smtp_handler)
 
     # Run main
     main()
-    send_logs_via_email(today, LOGS_PATH / f'{today}_debug.log')
+    send_logs_via_email(today, LOGS_PATH / f'{today}_warnings.log')
     print(f'Tiempo transcurrido: {(perf_counter() - t_start_program)/60:.2f} minutos')
