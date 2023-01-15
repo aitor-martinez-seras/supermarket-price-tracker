@@ -49,5 +49,7 @@ if __name__ == "__main__":
     from datetime import datetime
     today_datetime = datetime.now().date()
     today = today_datetime.isoformat().replace("-", "_")
+    print(f'Sending warning logs of {today} via email')
     send_logs_via_email(today, LOGS_PATH / f'{today}_warnings.log')
+    print(f'Logs sent, exiting program!')
 
