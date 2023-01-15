@@ -5,6 +5,9 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 from price_tracker.constants import USER_AGENTS
 
@@ -19,28 +22,42 @@ from price_tracker.constants import USER_AGENTS
 
 def scrape_html_of_url(product_url: str, has_js: bool):
     if has_js:
-        session = HTMLSession()
-        page = session.get(
-            product_url,
-            headers={'User-Agent': random.choice(USER_AGENTS)}
-        )
-        if page.status_code != 200:
-            print(f'Bad response {page.status_code}', end='\t')
-            raise AssertionError('no-html')
-        time.sleep(5)  # To enable the correct loading of the page
-        # The parameters in the render method are necessary to ensure a rendering is made
-        page.html.render(retries=10, wait=5, timeout=60, sleep=1)
-        page = page.html.html
+            session = HTMLSession()
+            page = session.get(
+                product_url,
+                headers={'User-Agent': random.choice(USER_AGENTS)}
+            )
+            if page.status_code != 200:
+                print(f'Bad response {page.status_code}', end='\t')
+                raise AssertionError('no-html')
+            time.sleep(5)  # To enable the correct loading of the page
+            # The parameters in the render method are necessary to ensure a rendering is made
+            page.html.render(retries=10, wait=5, timeout=60, sleep=1)
+            page = page.html.html
 
+        # else:
+        #     page = requests.get(
+        #         product_url,
+        #         headers={'User-Agent': random.choice(USER_AGENTS)})
+        #     if page.status_code != 200:
+        #         print(f'Bad response {page.status_code}', end='\t')
+        #         raise AssertionError('no-html')
+        #     time.sleep(3)
+        #     page = page.text
     else:
-        page = requests.get(
-            product_url,
-            headers={'User-Agent': random.choice(USER_AGENTS)})
-        if page.status_code != 200:
-            print(f'Bad response {page.status_code}', end='\t')
-            raise AssertionError('no-html')
-        time.sleep(3)
-        page = page.text
+        service = Service(executable_path="/usr/bin/chromium")
+        options = Options()
+        options.headless = True
+        options.add_argument("--enable-javascript")
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        # initializing webdriver for Chrome with our options
+        driver = webdriver.Chrome(service=service, options=options)
+        # getting GeekForGeeks webpage
+        driver.get(product_url)
+        time.sleep(5)  # To enable the correct loading of the page
+        page = driver.page_source
+        driver.close()
 
     soup = BeautifulSoup(page, 'html.parser')
     return soup
