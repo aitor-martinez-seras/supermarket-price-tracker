@@ -1,8 +1,8 @@
 import random
 import time
+import platform
 
 import pandas as pd
-import requests
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 from selenium import webdriver
@@ -45,9 +45,10 @@ def scrape_html_of_url(product_url: str, has_js: bool):
         #     time.sleep(3)
         #     page = page.text
     else:
-        service = Service(executable_path="/usr/bin/chromium")
         options = Options()
         options.headless = True
+        if platform.system() == 'Linux':
+            service = Service(executable_path="/usr/bin/chromedriver")
         options.add_argument("--enable-javascript")
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
