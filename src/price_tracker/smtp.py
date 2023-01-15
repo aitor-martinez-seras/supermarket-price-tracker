@@ -4,7 +4,7 @@ import ssl
 from pathlib import Path
 from email.message import EmailMessage
 
-from constants import SMTP_CFG_PATH
+from constants import SMTP_CFG_PATH, LOGS_PATH
 
 
 def send_logs_via_email(today: str, logs_path: Path):
@@ -49,6 +49,5 @@ if __name__ == "__main__":
     from datetime import datetime
     today_datetime = datetime.now().date()
     today = today_datetime.isoformat().replace("-", "_")
-    logs_path = Path(rf'C:\Users\110414\PycharmProjects\Seguidor-de-precios\logs\{today}_debug.log')
-    send_logs_via_email(today, logs_path)
+    send_logs_via_email(today, LOGS_PATH / f'{today}_warnings.log')
 
