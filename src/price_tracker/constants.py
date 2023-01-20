@@ -1,21 +1,24 @@
-import os
 from pathlib import Path
 import os
 
 # TODO: Preguntar a Aritz cual es la mejor manera de hacer esta operacion de importar los user agents
 
 # Root path
-ROOT_PATH = Path(os.getcwd())
+cwd = os.getcwd()
+ROOT_PATH = Path(cwd[:cwd.find("Seguidor-de-precios")+19])
 
 # Price_tracker package
 PACKAGE_PATH = ROOT_PATH / 'src/price_tracker'
+
+# Configs
+CONFIGS_PATH = PACKAGE_PATH / 'configs'
+SMTP_CFG_PATH = CONFIGS_PATH / 'smtp.toml'
 
 # Logs
 LOGS_PATH = ROOT_PATH / 'logs/'
 
 # Resources
 RESOURCES_PATH = PACKAGE_PATH / 'resources/'
-SMTP_CFG_PATH = RESOURCES_PATH / 'smtp.cfg'
 URLS_EXCEL_PATH = RESOURCES_PATH / r'Lista_de_productos.xlsx'
 
 # Outputs

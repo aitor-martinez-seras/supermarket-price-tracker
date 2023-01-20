@@ -2,7 +2,7 @@
 precios.csv
 src/price_tracker/outputs/precios.xlsx
 src/price_tracker/resources/scrapear_supermarkets.pptx
-src/price_tracker/resources/smtp.cfg
+src/price_tracker/configs/smtp.cfg
 prices-venv/
 
 .idea/
