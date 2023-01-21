@@ -66,7 +66,7 @@ class Eroski(Supermarket):
         #  is not available
         try:
             price = float(re.findall(r"\d+\,\d+", price)[0].replace(',', '.'))
-        except IndexError as e:
+        except IndexError:
             price = None
         return float(price)
 
