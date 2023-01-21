@@ -1,8 +1,7 @@
 def print_msg(msg: str):
     print(f'''------------------------------------------
 {msg}
-------------------------------------------'''
-    )
+------------------------------------------''')
 
 
 def custom_exception_info_msg(product_id: int, error_code: str) -> str:

@@ -3,11 +3,9 @@ import smtplib
 import ssl
 from pathlib import Path
 from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-from datetime import datetime
 
 import tomli
 
@@ -83,5 +81,4 @@ if __name__ == "__main__":
     today = "2023_01_10"
     print(f'Sending warning logs of {today} via email')
     send_logs_via_email(today, LOGS_PATH / f'{today}_warnings.log')
-    print(f'Logs sent, exiting program!')
-
+    print('Logs sent, exiting program!')

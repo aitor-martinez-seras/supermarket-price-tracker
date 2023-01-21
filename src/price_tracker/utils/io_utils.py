@@ -5,7 +5,6 @@ import platform
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from requests_html import HTMLSession
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -23,6 +22,7 @@ from price_tracker.constants import USER_AGENTS
 
 def scrape_html_of_url(product_url: str, has_js: bool):
     if has_js:
+        # Define options and service for selenium
         options = Options()
         options.headless = True
         if platform.system() == 'Linux':
@@ -30,14 +30,14 @@ def scrape_html_of_url(product_url: str, has_js: bool):
         options.add_argument("--enable-javascript")
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
-        # initializing webdriver for Chrome with our options
+
+        # Initializing webdriver for Chrome with our options
         driver = webdriver.Chrome(service=service, options=options)
-        # getting GeekForGeeks webpage
         driver.get(product_url)
         time.sleep(10)  # To enable the correct loading of the page
-        page = driver.page_source
-        driver.close()
 
+        html_content = driver.page_source
+        driver.close()
 
         # else:
         #     page = requests.get(
@@ -48,6 +48,7 @@ def scrape_html_of_url(product_url: str, has_js: bool):
         #         raise AssertionError('no-html')
         #     time.sleep(3)
         #     page = page.text
+
     else:
         page = requests.get(
             product_url,
@@ -57,9 +58,9 @@ def scrape_html_of_url(product_url: str, has_js: bool):
             print(f'Bad response {page.status_code}', end='\t')
             raise AssertionError('no-html')
         time.sleep(5)  # To enable the correct loading of the page
-        page = page.text
+        html_content = page.text
 
-    soup = BeautifulSoup(page, 'html.parser')
+    soup = BeautifulSoup(html_content, 'html.parser')
     return soup
 
 

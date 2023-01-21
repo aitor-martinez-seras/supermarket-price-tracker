@@ -20,8 +20,6 @@ def main(args):
     csv_path = OUTPUTS_PATH / f'{day_from}_precios.csv'
     df_prices = pd.read_csv(csv_path)
 
-
-
     # Save excel
     if args.day_to == 'today':
         day_to = day_from

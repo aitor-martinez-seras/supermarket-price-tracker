@@ -2,11 +2,8 @@ import sys
 from time import perf_counter
 from datetime import datetime
 from multiprocessing import Pool
-import argparse
 import logging
-from logging.handlers import SMTPHandler
-from pathlib import Path
-from typing import Tuple, List
+from typing import Tuple
 
 import pandas as pd
 import numpy as np

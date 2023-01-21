@@ -63,7 +63,7 @@ class Retriever:
         # the correct html
         if text is None:
             return ''
-        return text.text
+        return str(text.text)
 
     def check_units_in_split_str(self, prod_units: List[str], split_str: List[str]) -> bool:
         for unit in prod_units:
