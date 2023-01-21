@@ -1,4 +1,4 @@
-# from price_tracker.utils.retriever import Retriever
+import price_tracker
 
 
 def test_retrieving():

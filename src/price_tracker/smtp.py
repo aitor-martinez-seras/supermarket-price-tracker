@@ -9,7 +9,7 @@ from email import encoders
 
 import tomli
 
-from constants import SMTP_CFG_PATH, LOGS_PATH
+from price_tracker.constants import SMTP_CFG_PATH, LOGS_PATH
 
 
 def send_logs_via_email(today: str, logs_path: Path):
