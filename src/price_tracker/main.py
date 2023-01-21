@@ -12,7 +12,7 @@ from constants import URLS_EXCEL_PATH, UNITS, MONTHS, OUTPUTS_PATH, LOGS_PATH
 from utils import EROSKI_RET, BM_RET, return_prices_and_log_msgs
 from utils.io_utils import scrape_html_of_url, load_excel, write_dataframe_to_excel
 from utils.prints import print_msg, custom_exception_info_msg
-from smtp import send_logs_via_email
+from smtp import send_logs_and_data_via_email
 
 
 def create_logger() -> logging.Logger:
@@ -183,5 +183,5 @@ if __name__ == '__main__':
     # Run main
     logger = create_logger()
     main()
-    send_logs_via_email(today, LOGS_PATH / f'{today}_warnings.log')
+    send_logs_and_data_via_email(today_datetime, LOGS_PATH / f'{today}_warnings.log')
     print(f'Tiempo transcurrido: {(perf_counter() - t_start_program)/60:.2f} minutos')

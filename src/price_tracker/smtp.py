@@ -1,6 +1,7 @@
 import configparser
 import smtplib
 import ssl
+from datetime import date
 from pathlib import Path
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -9,11 +10,14 @@ from email import encoders
 
 import tomli
 
-from price_tracker.constants import SMTP_CFG_PATH, LOGS_PATH
+from price_tracker.constants import SMTP_CFG_PATH, LOGS_PATH, OUTPUTS_PATH, MONTHS
 
 
-def send_logs_via_email(today: str, logs_path: Path):
+def send_logs_and_data_via_email(today_datetime: date, logs_path: Path):
     SMTP_CFG = load_smtp_settings(SMTP_CFG_PATH)
+    today = today_datetime.isoformat().replace("-", "_")
+    month_number = str(today_datetime.month).zfill(2)
+    month_name = MONTHS[month_number]
 
     # Load desired logs
     with open(logs_path, mode='r') as f:
@@ -33,14 +37,16 @@ def send_logs_via_email(today: str, logs_path: Path):
     body_part = MIMEText(body, 'plain')
     em.attach(body_part)
 
-    with open(r"C:\Users\110414\PycharmProjects\Seguidor-de-precios\src\price_tracker\outputs\01_listado_precios_Enero.xlsx", 'rb') as file:
+    filename = f'{month_number}_listado_precios_{month_name}.xlsx'
+    file_path = OUTPUTS_PATH / filename
+
+    with open(file_path, 'rb') as file:
         # Attach the file with filename to the email
         p = MIMEBase('application', 'octet-stream')
         p.set_payload(file.read())
         encoders.encode_base64(p)
-        p.add_header('Content-Disposition', "attachment; filename= %s" % 'prueba.xlsx')
+        p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
         em.attach(p)
-        # em.attach(MIMEApplication(file.read(), Name=f'prueba.xlsx'))
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(SMTP_CFG['smtp_server'], SMTP_CFG['port'], context=context) as server:
@@ -80,5 +86,5 @@ if __name__ == "__main__":
     # today = today_datetime.isoformat().replace("-", "_")
     today = "2023_01_10"
     print(f'Sending warning logs of {today} via email')
-    send_logs_via_email(today, LOGS_PATH / f'{today}_warnings.log')
+    send_logs_and_data_via_email(today, LOGS_PATH / f'{today}_warnings.log')
     print('Logs sent, exiting program!')
