@@ -3,9 +3,12 @@ import os
 
 # TODO: Preguntar a Aritz cual es la mejor manera de hacer esta operacion de importar los user agents
 
+# Folder name (by default)
+FOLDER_NAME = "supermarket-price-tracker"
+
 # Root path
 cwd = os.getcwd()
-ROOT_PATH = Path(cwd[:cwd.find("Seguidor-de-precios")+19])
+ROOT_PATH = Path(cwd[:cwd.find(FOLDER_NAME)+len(FOLDER_NAME)])
 
 # Price_tracker package
 PACKAGE_PATH = ROOT_PATH / 'src/price_tracker'
