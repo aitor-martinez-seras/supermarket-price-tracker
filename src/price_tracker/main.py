@@ -18,7 +18,40 @@ from utils.prints import print_msg, custom_exception_info_msg
 from smtp import send_logs_via_email
 
 
-# TODO: Tengo que implementar que se vaya acumulando en un logger el status de cada consulta, si es OK o no
+def create_logger() -> logging.Logger:
+    # Creat obj
+    logger = logging.getLogger('price_tracker')
+    logger.setLevel(logging.DEBUG)  # Set minimum level to enable the handlers
+
+    # Create Handlers
+    file_handler_info = logging.FileHandler(LOGS_PATH / f'{today}_info.log', mode='w')
+    file_handler_debug = logging.FileHandler(LOGS_PATH / f'{today}_debug.log', mode='w')
+    file_handler_warnings = logging.FileHandler(LOGS_PATH / f'{today}_warnings.log', mode='w')
+    stream_handler = logging.StreamHandler(sys.stdout)
+
+    # Set handler levels
+    file_handler_info.setLevel(logging.INFO)
+    file_handler_debug.setLevel(logging.DEBUG)
+    file_handler_warnings.setLevel(logging.WARNING)
+    stream_handler.setLevel(logging.DEBUG)
+    # smtp_handler.setLevel(logging.INFO)
+
+    # Create the formatter and assign to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler_info.setFormatter(formatter)
+    file_handler_debug.setFormatter(formatter)
+    file_handler_warnings.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
+
+    # Add Handlers to logger
+    logger.addHandler(file_handler_info)
+    logger.addHandler(file_handler_debug)
+    logger.addHandler(file_handler_warnings)
+    logger.addHandler(stream_handler)
+
+    return logger
+
+
 def retrieve_one_product(args) -> Tuple[float, str, int]:
     global logger
     # Performance analysis
@@ -62,9 +95,6 @@ def main():
     # Create the dataframe to store prices
     df_prices = df_urls[['ID', 'PRODUCTOS', 'UNIDADES']]
 
-    # TODO: Parece que funciona el multiprocessing tanto en RPi como en Windows, aunque en RPI muestra error raro
-    #   el
-
     logger.info('Comenzar recogida de datos de los supermercados')
     with Pool(4) as pool:
 
@@ -75,8 +105,6 @@ def main():
             retrieve_one_product,
             zip(df_urls['ID'], df_urls['UNIDADES'], df_urls['URL Eroski'], EROSKI_RET)
         )
-        # TODO: En el logger hay que indicar claramente el super de donde es, asi que añadir a la funcion la opcion
-        #   de definir un supermercado que se añadira al inicio del mensaje
         prices_eroski = return_prices_and_log_msgs(prices_and_msgs, logger, supermarket='Eroski')
         t2 = perf_counter()
         logger.info(f'Tiempo en eroski: {(t2 - t1)/60:.2f} minutos')
@@ -103,13 +131,9 @@ def main():
 
     print(f'Tiempo total en recuperar los precios de todos los supermercados: {(perf_counter() - t1)/60:.2f} minutos')
 
+    # Add the different colums to the dataframe
     prices_eroski = np.asarray(prices_eroski, dtype='float')
     prices_bm = np.asarray(prices_bm, dtype='float')
-
-    # TODO: Add functionality to repeat the products where a 0 was the price, in case now it retrieves it.
-    #   implement a for loop over the values where prices == 0 (np.where(prices==0))...
-
-    # Add the different colums to the dataframe
     df_prices['Eroski'] = pd.Series(prices_eroski, dtype='float')
     df_prices['BM'] = pd.Series(prices_bm, dtype='float')
 
@@ -154,53 +178,13 @@ if __name__ == '__main__':
     t_start_program = perf_counter()
     # parser = argparse.ArgumentParser(description='Supermarket-price-tracker main script')
     # args = parser.parse_args()
-    # --------------------
-    # Define loggers
-    # --------------------
-    # SMTP_CFG = load_smtp_settings(SMTP_CFG_PATH)
-    logger = logging.getLogger('price_tracker')
-    logger.setLevel(logging.DEBUG)  # Set minimum level to enable the handlers
 
+    # Define the day globally
     today_datetime = datetime.now().date()
     today = today_datetime.isoformat().replace("-", "_")
 
-    # Create Handlers
-    file_handler_info = logging.FileHandler(LOGS_PATH / f'{today}_info.log', mode='w')
-    file_handler_debug = logging.FileHandler(LOGS_PATH / f'{today}_debug.log', mode='w')
-    file_handler_warnings = logging.FileHandler(LOGS_PATH / f'{today}_warnings.log', mode='w')
-    stream_handler = logging.StreamHandler(sys.stdout)
-    # smtp_handler = SMTPHandler(
-    #     mailhost=(SMTP_CFG['smtp_server'], int(SMTP_CFG['port'])),
-    #     fromaddr=SMTP_CFG['sender_email'],
-    #     toaddrs=[SMTP_CFG['receiver_email']],
-    #     subject=f'Informe dia {today}',
-    #     credentials=(SMTP_CFG['sender_email'], SMTP_CFG['password']),
-    #     secure=()
-    # )
-
-    # Set handler levels
-    file_handler_info.setLevel(logging.INFO)
-    file_handler_debug.setLevel(logging.DEBUG)
-    file_handler_warnings.setLevel(logging.WARNING)
-    stream_handler.setLevel(logging.DEBUG)
-    # smtp_handler.setLevel(logging.INFO)
-
-    # Create the formatter and assign to the handlers
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler_info.setFormatter(formatter)
-    file_handler_debug.setFormatter(formatter)
-    file_handler_warnings.setFormatter(formatter)
-    stream_handler.setFormatter(formatter)
-    # smtp_handler.setFormatter(formatter)
-
-    # Add Handlers to logger
-    logger.addHandler(file_handler_info)
-    logger.addHandler(file_handler_debug)
-    logger.addHandler(file_handler_warnings)
-    logger.addHandler(stream_handler)
-    # logger.addHandler(smtp_handler)
-
     # Run main
+    logger = create_logger()
     main()
     send_logs_via_email(today, LOGS_PATH / f'{today}_warnings.log')
     print(f'Tiempo transcurrido: {(perf_counter() - t_start_program)/60:.2f} minutos')
