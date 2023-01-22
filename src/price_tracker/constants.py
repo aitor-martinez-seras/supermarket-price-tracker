@@ -7,20 +7,19 @@ import os
 FOLDER_NAME = "supermarket-price-tracker"
 
 # Root path
-cwd = os.getcwd()
-ROOT_PATH = Path(cwd[:cwd.find(FOLDER_NAME)+len(FOLDER_NAME)])
+path_to_constants = os.path.dirname(__file__)
+ROOT_PATH = Path(path_to_constants).parent.parent
+# ROOT_PATH = Path(cwd[:cwd.find(FOLDER_NAME)+len(FOLDER_NAME)])
 
 # Price_tracker package
 PACKAGE_PATH = ROOT_PATH / 'src/price_tracker'
-PACKAGE_PATH = Path('src/price_tracker')
 
 # Configs
 CONFIGS_PATH = PACKAGE_PATH / 'configs'
 SMTP_CFG_PATH = CONFIGS_PATH / 'smtp.toml'
 
 # Logs
-# LOGS_PATH = ROOT_PATH / 'logs/'
-LOGS_PATH = Path('logs/')
+LOGS_PATH = ROOT_PATH / 'logs/'
 
 # Resources
 RESOURCES_PATH = PACKAGE_PATH / 'resources/'
@@ -74,3 +73,4 @@ with open(RESOURCES_PATH / 'user-agents.txt', 'r') as f:
         strip_lines = line.strip()
         USER_AGENTS.append(strip_lines)
 """
+print(ROOT_PATH, PACKAGE_PATH, LOGS_PATH, OUTPUTS_PATH)
