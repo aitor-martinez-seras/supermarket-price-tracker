@@ -1,2 +1,2 @@
 #!/bin/bash
-prices-venv/bin/python src/price_tracker/main.py
+/home/pi/supermarket-price-tracker/prices-venv/bin/python3 src/price_tracker/main.py
