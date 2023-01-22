@@ -12,6 +12,7 @@ ROOT_PATH = Path(cwd[:cwd.find(FOLDER_NAME)+len(FOLDER_NAME)])
 
 # Price_tracker package
 PACKAGE_PATH = ROOT_PATH / 'src/price_tracker'
+PACKAGE_PATH = Path('src/price_tracker')
 
 # Configs
 CONFIGS_PATH = PACKAGE_PATH / 'configs'
