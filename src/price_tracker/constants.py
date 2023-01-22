@@ -19,7 +19,7 @@ CONFIGS_PATH = PACKAGE_PATH / 'configs'
 SMTP_CFG_PATH = CONFIGS_PATH / 'smtp.toml'
 
 # Logs
-LOGS_PATH = ROOT_PATH / 'logs/'
+LOGS_PATH = 'logs/'
 
 # Resources
 RESOURCES_PATH = PACKAGE_PATH / 'resources/'
